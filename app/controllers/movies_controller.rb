@@ -1,5 +1,9 @@
 class MoviesController < ApplicationController
-
+  
+  def initialize
+    @all_ratings = Movie.all_ratings
+  end
+  
   def show
     id = params[:id] # retrieve movie ID from URI route
     @movie = Movie.find(id) # look up movie by unique ID
@@ -7,7 +11,8 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+    @ratings_to_show = setup_ratings_to_show_array
+    @movies = Movie.with_ratings(setup_ratings_to_show_array)
   end
 
   def new
@@ -43,5 +48,13 @@ class MoviesController < ApplicationController
   # This helps make clear which methods respond to requests, and which ones do not.
   def movie_params
     params.require(:movie).permit(:title, :rating, :description, :release_date)
+  end
+  
+  def setup_ratings_to_show_array
+    if params[:ratings].nil?
+      @ratings_to_show = []
+    else
+      @ratings_to_show = params[:ratings].keys
+    end
   end
 end
