@@ -8,19 +8,15 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings = Movie.all_ratings
-    @sort = params[:sort] || session[:sort]
-    @ratings_to_show = params[:ratings] || session[:ratings] || setup_ratings_to_show_array 
-    @movies = Movie.with_ratings(@ratings_to_show).order(@sort)
-    session[:sort], session[:ratings] = @sort, @ratings_to_show
-    byebug
-    if params[:sort] != session[:sort] or params[:ratings] != session[:ratings]
-      flash.keep
-      redirect_to movies_path(sort: @sort, ratings: @ratings)
+    if params[:sort] == 'title'
+      @title_sort = params[:sort]
+    elsif params[:sort] == 'release_date'
+      @release_date_sort = params[:sort]
     end
-  end
-  
-  def reset_session
-    @_request.reset_session
+    @sort = @title_sort || @release_date_sort
+    @ratings_to_show = setup_ratings_to_show_array
+    @ratings_hash = @ratings_to_show.each_with_object({}) { |k, h| h[k] = 1 }
+    @movies = Movie.with_ratings(setup_ratings_to_show_array).order(@sort)
   end
 
   def new
@@ -51,9 +47,6 @@ class MoviesController < ApplicationController
     redirect_to movies_path
   end
   
-  helper_method :append_class_helper_title
-  helper_method :append_class_helper_release_date
-  
   private
   # Making "internal" methods private is not required, but is a common practice.
   # This helps make clear which methods respond to requests, and which ones do not.
@@ -67,18 +60,7 @@ class MoviesController < ApplicationController
     else
       @ratings_to_show = params[:ratings].keys
     end
-    return @ratings_to_show.each_with_object({}) { |k, h| h[k] = 1 }
   end
   
-  def append_class_helper_title(class_name)
-    if params[:sort] == 'title'
-      return class_name 
-    end
-  end
-  
-    def append_class_helper_release_date(class_name)
-      if params[:sort] == 'release_date'
-        return class_name
-      end
-    end
+
 end
